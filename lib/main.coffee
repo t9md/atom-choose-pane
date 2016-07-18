@@ -1,7 +1,5 @@
 {CompositeDisposable} = require 'atom'
 
-Input = require './input'
-
 createElement = (label) ->
   element = document.createElement "div"
   element.classList.add("choose-pane")
@@ -11,50 +9,54 @@ createElement = (label) ->
 module.exports =
   activate: ->
     @subscriptions = new CompositeDisposable
-    @input = new Input
-
     @subscribe atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
+
+  deactivate: ->
+    @input?.destroy()
+    @subscriptions?.dispose()
+    {@subscriptions, @input} = {}
+
+  subscribe: (arg) ->
+    @subscriptions.add(arg)
 
   start: ->
     @labelElements = []
     label2Target = {}
 
-    leftPanels = atom.workspace.getLeftPanels()
-    panes = atom.workspace.getPanes()
-    rightPanels = atom.workspace.getRightPanels()
-    targets = [leftPanels..., panes..., rightPanels...]
+    targets = [
+      atom.workspace.getLeftPanels()...
+      atom.workspace.getPanes()...
+      atom.workspace.getRightPanels()...
+    ]
 
     labelChars = atom.config.get('choose-pane.labelChars').split('')
-
     for target in targets when labelChar = labelChars.shift()
       label2Target[labelChar.toLowerCase()] = target
-      @showLabelToPane(target, labelChar)
+      @renderLabel(target, labelChar)
 
+    @input ?= new (require './input')
     @input.readInput().then (input) =>
       if target = label2Target[input.toLowerCase()]
-        if typeof(target.activate) is 'function'
-          # Pane
-          target.activate()
-        else
-          # Panel
-          target.getItem()?.focus?()
+        @focusTarget(target)
       @removeLabelElemnts()
     .catch =>
       atom.workspace.getActivePane().activate()
       @removeLabelElemnts()
 
+  focusTarget: (target) ->
+    if typeof(target.activate) is 'function'
+      # Pane
+      target.activate()
+    else
+      # Panel
+      target.getItem()?.focus?()
+
   removeLabelElemnts: ->
     labelElement.remove() for labelElement in @labelElements
+    @labelElements = []
 
-  showLabelToPane: (pane, label) ->
+  renderLabel: (target, label) ->
     labelElement = createElement(label)
-    atom.views.getView(pane).appendChild(labelElement)
+    atom.views.getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)
-
-  subscribe: (arg) ->
-    @subscriptions.add(arg)
-
-  deactivate: ->
-    @subscriptions?.dispose()
-    {@subscriptions} = {}

@@ -8,6 +8,11 @@
   "engines": {
     "atom": ">=0.174.0 <2.0.0"
   },
+  "activationCommands": {
+    "atom-workspace": [
+      "choose-pane:start"
+    ]
+  },
   "configSchema": {
     "labelChars": {
       "order": 1,

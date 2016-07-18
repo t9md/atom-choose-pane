@@ -11,10 +11,6 @@ choose pane by label.
 3. Label is shown on panels and panes
 4. Choose label where you want to focus
 
-# Development status
-
-alpha
-
 # Style customization
 
 You can customize label style in `style.less`.

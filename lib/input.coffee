@@ -16,6 +16,12 @@ class Input extends HTMLElement
     {@editor, @panel, @editorElement} = {}
     @remove()
 
+  handleEvents: ->
+    atom.commands.add @editorElement,
+      'core:confirm': => @confirm()
+      'core:cancel': => @cancel()
+      'blur': => @cancel() unless @finished
+
   readInput: ->
     unless @editorElement
       @editorElement = document.getElementById("choose-pane-editor")
@@ -26,17 +32,22 @@ class Input extends HTMLElement
     @finished = false
     @panel.show()
     @editorElement.focus()
+    @commandSubscriptions = @handleEvents()
 
-    new Promise (resolve) =>
+    new Promise (resolve, reject) =>
       @resolve = resolve
+      @reject = reject
 
   confirm: ->
+    @reject = null
     @resolve(@editor.getText())
     @cancel()
 
   cancel: ->
     @commandSubscriptions?.dispose()
+    @reject?()
     @resolve = null
+    @reject = null
     @finished = true
     @editor.setText ''
     @panel?.hide()

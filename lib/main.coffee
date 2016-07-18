@@ -18,17 +18,30 @@ module.exports =
 
   start: ->
     @labelElements = []
-    label2Pane = {}
-    panes = atom.workspace.getPanes()
+    label2Target = {}
 
-    for pane, i in panes
-      label = i + 1
-      label2Pane[label] = pane
-      @showLabelToPane(pane, label)
+    leftPanels = atom.workspace.getLeftPanels()
+    panes = atom.workspace.getPanes()
+    rightPanels = atom.workspace.getRightPanels()
+    targets = [leftPanels..., panes..., rightPanels...]
+
+    labelChars = atom.config.get('choose-pane.labelChars').split('')
+
+    for target in targets when labelChar = labelChars.shift()
+      label2Target[labelChar.toLowerCase()] = target
+      @showLabelToPane(target, labelChar)
 
     @input.readInput().then (input) =>
-      if pane = label2Pane[Number(input)]
-        pane.activate()
+      if target = label2Target[input.toLowerCase()]
+        if typeof(target.activate) is 'function'
+          # Pane
+          target.activate()
+        else
+          # Panel
+          target.getItem()?.focus?()
+      @removeLabelElemnts()
+    .catch =>
+      atom.workspace.getActivePane().activate()
       @removeLabelElemnts()
 
   removeLabelElemnts: ->

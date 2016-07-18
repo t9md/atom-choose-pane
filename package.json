@@ -7,5 +7,13 @@
   "license": "MIT",
   "engines": {
     "atom": ">=0.174.0 <2.0.0"
+  },
+  "configSchema": {
+    "labelChars": {
+      "order": 1,
+      "type": "string",
+      "default": ";ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "description": "Always be matched with case insensitive"
+    }
   }
 }

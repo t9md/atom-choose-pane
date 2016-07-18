@@ -6,10 +6,10 @@ choose pane by label.
 
 # How to start
 
-1. set keymap in your `keymap.cson`. (no default keymap)
-2. invoke `choose-pane:start` from that keymap.
-3. label is shown on panels and panes
-4. choose label where you want to focus
+1. Configure keymap in your `keymap.cson`. (no default keymap)
+2. Invoke `choose-pane:start` from that keymap.
+3. Label is shown on panels and panes
+4. Choose label where you want to focus
 
 # Development status
 

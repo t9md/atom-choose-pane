@@ -6,6 +6,9 @@ createElement = (label) ->
   element.textContent = label
   element
 
+isFunction = (object) ->
+  typeof(object) is 'function'
+
 module.exports =
   activate: ->
     @subscriptions = new CompositeDisposable
@@ -15,14 +18,15 @@ module.exports =
   deactivate: ->
     @input?.destroy()
     @subscriptions?.dispose()
-    {@subscriptions, @input} = {}
+    {@subscriptions, @input, @lastFocused} = {}
 
   subscribe: (arg) ->
     @subscriptions.add(arg)
 
   start: ->
-    @labelElements = []
-    label2Target = {}
+    focusedElement = document.activeElement
+    restoreFocus = ->
+      focusedElement?.focus()
 
     targets = [
       atom.workspace.getLeftPanels()...
@@ -30,33 +34,41 @@ module.exports =
       atom.workspace.getRightPanels()...
     ]
 
+    label2Target = {}
     labelChars = atom.config.get('choose-pane.labelChars').split('')
     for target in targets when labelChar = labelChars.shift()
       label2Target[labelChar.toLowerCase()] = target
       @renderLabel(target, labelChar)
 
     @input ?= new (require './input')
-    @input.readInput().then (input) =>
-      if target = label2Target[input.toLowerCase()]
+    @input.readInput().then (char) =>
+      target = if char is 'last-focused'
+        @lastFocused
+      else
+        label2Target[char.toLowerCase()]
+
+      if target?
         @focusTarget(target)
+        @lastFocused = focusedElement
+      else
+        restoreFocus()
       @removeLabelElemnts()
     .catch =>
-      atom.workspace.getActivePane().activate()
+      restoreFocus()
       @removeLabelElemnts()
 
   focusTarget: (target) ->
-    if typeof(target.activate) is 'function'
-      # Pane
-      target.activate()
-    else
-      # Panel
-      target.getItem()?.focus?()
+    switch
+      when isFunction(target.activate) then target.activate() # Pane
+      when isFunction(target.getItem) then target.getItem().focus?() # Panel
+      else target?.focus() # Raw element
 
   removeLabelElemnts: ->
     labelElement.remove() for labelElement in @labelElements
-    @labelElements = []
+    @labelElements = null
 
-  renderLabel: (target, label) ->
-    labelElement = createElement(label)
+  renderLabel: (target, labelChar) ->
+    @labelElements ?= []
+    labelElement = createElement(labelChar)
     atom.views.getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)

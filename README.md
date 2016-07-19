@@ -28,6 +28,10 @@ You can customize label style in `style.less`.
 ```coffeescript
 'atom-workspace:not([mini])':
   'ctrl-;': 'choose-pane:start'
+
+# Back to last focused.
+'atom-text-editor#choose-pane-editor':
+  'ctrl-;': 'choose-pane:last-focused'
 ```
 
 - Mine(I'm vim-mode-plus user)
@@ -39,6 +43,10 @@ You can customize label style in `style.less`.
 # For tree-view
 '.tree-view':
   '-': 'choose-pane:start'
+
+# Map '-', so that I can focus last-focused element by typing `-` twice.
+'atom-text-editor#choose-pane-editor':
+  '-': 'choose-pane:last-focused'
 ```
 
 # Label customization

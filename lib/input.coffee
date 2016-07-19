@@ -18,6 +18,7 @@ class Input extends HTMLElement
 
   handleEvents: ->
     atom.commands.add @editorElement,
+      'choose-pane:last-focused': => @confirm('last-focused')
       'core:confirm': => @confirm()
       'core:cancel': => @cancel()
       'blur': => @cancel() unless @finished
@@ -38,9 +39,9 @@ class Input extends HTMLElement
       @resolve = resolve
       @reject = reject
 
-  confirm: ->
+  confirm: (message=null) ->
     @reject = null
-    @resolve(@editor.getText())
+    @resolve(message ? @editor.getText())
     @cancel()
 
   cancel: ->

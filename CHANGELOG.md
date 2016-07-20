@@ -1,3 +1,6 @@
+# 0.2.1:
+- Add spec
+
 # 0.2.0:
 - Can back to last-focused element by `choose-pane:last-focused`. This new command is aailable only on choose-pane-editor.
 

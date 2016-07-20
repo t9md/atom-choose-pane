@@ -1,4 +1,4 @@
-# choose-pane
+# choose-pane [![Build Status](https://travis-ci.org/t9md/atom-choose-pane.svg?branch=master)](https://travis-ci.org/t9md/atom-choose-pane)
 
 choose pane by label.
 

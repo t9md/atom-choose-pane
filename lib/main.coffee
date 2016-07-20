@@ -1,9 +1,9 @@
 {CompositeDisposable} = require 'atom'
 
-createElement = (label) ->
-  element = document.createElement "div"
+createLabelElement = (labelChar) ->
+  element = document.createElement("div")
   element.classList.add("choose-pane")
-  element.textContent = label
+  element.textContent = labelChar
   element
 
 isFunction = (object) ->
@@ -69,6 +69,6 @@ module.exports =
 
   renderLabel: (target, labelChar) ->
     @labelElements ?= []
-    labelElement = createElement(labelChar)
+    labelElement = createLabelElement(labelChar)
     atom.views.getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)

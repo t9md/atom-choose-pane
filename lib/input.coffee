@@ -1,5 +1,3 @@
-{Disposable, CompositeDisposable} = require 'atom'
-
 class Input extends HTMLElement
   createdCallback: ->
     @innerHTML = """
@@ -11,9 +9,9 @@ class Input extends HTMLElement
     this
 
   destroy: ->
-    @editor.destroy()
-    @panel?.destroy()
-    {@editor, @panel, @editorElement} = {}
+    @editor?.destroy()
+    @panel.destroy()
+    {@panel, @editor, @editorElement} = {}
     @remove()
 
   handleEvents: ->
@@ -33,11 +31,9 @@ class Input extends HTMLElement
     @finished = false
     @panel.show()
     @editorElement.focus()
-    @commandSubscriptions = @handleEvents()
+    @commandSubscription = @handleEvents()
 
-    new Promise (resolve, reject) =>
-      @resolve = resolve
-      @reject = reject
+    new Promise (@resolve, @reject) =>
 
   confirm: (message=null) ->
     @reject = null
@@ -45,13 +41,12 @@ class Input extends HTMLElement
     @cancel()
 
   cancel: ->
-    @commandSubscriptions?.dispose()
+    @commandSubscription?.dispose()
     @reject?()
-    @resolve = null
-    @reject = null
+    {@resolve, @reject} = {}
     @finished = true
-    @editor.setText ''
-    @panel?.hide()
+    @editor.setText('')
+    @panel.hide()
 
 module.exports = document.registerElement 'choose-pane-input',
   extends: 'div'

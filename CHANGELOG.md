@@ -1,3 +1,6 @@
+# 0.3.0:
+- Differentiate active element(pane or panel)
+
 # 0.2.1:
 - Add spec
 

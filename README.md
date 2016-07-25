@@ -2,7 +2,7 @@
 
 choose pane by label.
 
-![](https://raw.githubusercontent.com/t9md/t9md/5ca8d2ad710ce24e1ecbc3777b5bf03432dc3ef9/img/atom-choose-pane.gif)
+![](https://raw.githubusercontent.com/t9md/t9md/0331a56774cd283aab2548708d740cd0f9f8e59c/img/atom-choose-pane.gif)
 
 # How to start
 

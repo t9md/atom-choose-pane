@@ -1,3 +1,6 @@
+# 0.4.0:
+- Differentiate last-focused element(pane or panel)
+
 # 0.3.0:
 - Differentiate active element(pane or panel)
 

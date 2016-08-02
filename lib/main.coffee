@@ -1,9 +1,9 @@
 {CompositeDisposable} = require 'atom'
 
-createLabelElement = (labelChar, hasFocus) ->
+createLabelElement = (labelChar, className=null) ->
   element = document.createElement("div")
   element.classList.add("choose-pane")
-  element.classList.add("active") if hasFocus
+  element.classList.add(className) if className
   element.textContent = labelChar
   element
 
@@ -39,7 +39,7 @@ module.exports =
     labelChars = atom.config.get('choose-pane.labelChars').split('')
     for target in targets when labelChar = labelChars.shift()
       label2Target[labelChar.toLowerCase()] = target
-      @renderLabel(target, labelChar, @hasTargetFocused(target))
+      @renderLabel(target, labelChar)
 
     @input ?= new (require './input')
     @input.readInput().then (char) =>
@@ -58,11 +58,21 @@ module.exports =
       restoreFocus()
       @removeLabelElemnts()
 
+  getLabelClassNameForTarget: (target) ->
+    switch
+      when @hasTargetFocused(target) then 'active'
+      when @hasLastFocused(target) then 'last-focused'
+
+  hasLastFocused: (target) ->
+    return false unless @lastFocused?
+    switch
+      when isFunction(target.activate) then atom.views.getView(target).contains(@lastFocused)
+      when isFunction(target.getItem) then target.getItem()[0].contains(@lastFocused)
+
   hasTargetFocused: (target) ->
     switch
       when isFunction(target.activate) then target.isFocused() # Pane
       when isFunction(target.getItem) then target.getItem().hasFocus?() # Panel
-      else target?.hasFocus() # Raw element
 
   focusTarget: (target) ->
     switch
@@ -74,8 +84,9 @@ module.exports =
     labelElement.remove() for labelElement in @labelElements
     @labelElements = null
 
-  renderLabel: (target, labelChar, hasFocus) ->
+  renderLabel: (target, labelChar) ->
     @labelElements ?= []
-    labelElement = createLabelElement(labelChar, hasFocus)
+    className = @getLabelClassNameForTarget(target)
+    labelElement = createLabelElement(labelChar, className)
     atom.views.getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)

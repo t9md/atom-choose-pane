@@ -11,13 +11,23 @@ choose pane by label.
 3. Label is shown on panels and panes
 4. Choose label where you want to focus
 
+[NOTE]:
+- Current active pane is highlighted by different color.
+- You can quickly back to last-focused pane by `choose-pane:last-focused` in choosing mode. This last-focused pane denoted by underlined label.
+
 # Style customization
 
 You can customize label style in `style.less`.
 
 ```less
 .choose-pane {
-  color: red;
+  color: white;
+  &.active {
+    color: green;
+  }
+  &.last-focused {
+    text-decoration: line-through;;
+  }
 }
 ```
 

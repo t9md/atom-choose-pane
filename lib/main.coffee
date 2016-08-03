@@ -7,19 +7,40 @@ createLabelElement = (labelChar, className=null) ->
   element.textContent = labelChar
   element
 
-isFunction = (object) ->
-  typeof(object) is 'function'
+getView = (model) -> atom.views.getView(model)
+isPane = (target) -> target.constructor.name is 'Pane'
+isPanel = (target) -> target.constructor.name is 'Panel'
+isFunction = (object) -> typeof(object) is 'function'
+
+getHisotryManager = ->
+  entries = [null, null]
+
+  push: (entry) ->
+    entries.push(entry)
+    entries.splice(2) # truncate to 2 length
+  get: -> entries[0]
 
 module.exports =
+  history: null
+
   activate: ->
+    @history = getHisotryManager()
     @subscriptions = new CompositeDisposable
     @subscribe atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
 
+    @subscribe atom.workspace.observeActivePane (pane) =>
+      @history.push(pane) unless @isLocked()
+
+  locked: false
+  lock: -> @locked = true
+  unLock: -> @locked = false
+  isLocked: -> @locked
+
   deactivate: ->
     @input?.destroy()
     @subscriptions?.dispose()
-    {@subscriptions, @input, @lastFocused} = {}
+    {@subscriptions, @input, @history} = {}
 
   subscribe: (arg) ->
     @subscriptions.add(arg)
@@ -44,13 +65,15 @@ module.exports =
     @input ?= new (require './input')
     @input.readInput().then (char) =>
       target = if char is 'last-focused'
-        @lastFocused
+        @history.get()
       else
         label2Target[char.toLowerCase()]
 
       if target?
+        @lock()
         @focusTarget(target)
-        @lastFocused = focusedElement
+        @history.push(target)
+        @unLock()
       else
         restoreFocus()
       @removeLabelElemnts()
@@ -64,21 +87,22 @@ module.exports =
       when @hasLastFocused(target) then 'last-focused'
 
   hasLastFocused: (target) ->
-    return false unless @lastFocused?
-    switch
-      when isFunction(target.activate) then atom.views.getView(target).contains(@lastFocused)
-      when isFunction(target.getItem) then target.getItem()[0].contains(@lastFocused)
+    lastFocused = @history.get()
+    return false unless lastFocused?
+    if target.constructor is lastFocused.constructor
+      target is lastFocused
+    else
+      false
 
   hasTargetFocused: (target) ->
     switch
-      when isFunction(target.activate) then target.isFocused() # Pane
-      when isFunction(target.getItem) then target.getItem().hasFocus?() # Panel
+      when isPane(target) then target.isFocused()
+      when isPanel(target) then target.getItem().hasFocus?()
 
   focusTarget: (target) ->
     switch
-      when isFunction(target.activate) then target.activate() # Pane
-      when isFunction(target.getItem) then target.getItem().focus?() # Panel
-      else target?.focus() # Raw element
+      when isPane(target) then target.activate()
+      when isPanel(target) then target.getItem().focus?()
 
   removeLabelElemnts: ->
     labelElement.remove() for labelElement in @labelElements
@@ -88,5 +112,5 @@ module.exports =
     @labelElements ?= []
     className = @getLabelClassNameForTarget(target)
     labelElement = createLabelElement(labelChar, className)
-    atom.views.getView(target).appendChild(labelElement)
+    getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)

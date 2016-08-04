@@ -16,9 +16,10 @@ getHisotryManager = ->
   entries = [null, null]
 
   push: (entry) ->
+    entries.shift()
     entries.push(entry)
-    entries.splice(2) # truncate to 2 length
   get: -> entries[0]
+  dump: -> entries
 
 module.exports =
   history: null

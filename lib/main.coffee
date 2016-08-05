@@ -14,36 +14,25 @@ isPanel = (target) -> target?.constructor?.name is 'Panel'
 isFunction = (object) -> typeof(object) is 'function'
 isInstanceOfTreeView = (target) -> target.constructor.name is 'TreeView'
 
-getHisotryManager = ->
-  entries = [null, null]
+getHisotryManager = (initialEntry) ->
+  entries = [null, initialEntry]
 
   save: (entry) ->
+    # Ignore unfocus/re-focus to same pane.
+    #  e.g. focus mini editor and back to original pane..
     return if @getCurrentFocus() is entry
     entries.shift()
     entries.push(entry)
-    # @dump("SAVING")
+
   getLastFocus: -> entries[0]
   getCurrentFocus: -> entries.slice(-1)[0]
-
-  dumpEntry: (entry) ->
-    name = entry?.constructor?.name
-    str = switch
-      when isPane(entry) then path.basename(entry.getActiveEditor()?.getPath?())
-      when isPanel(entry) then 'Panel'
-    "#{name}: #{str}"
-
-  dump: (msg) ->
-    unless entries.length is 2
-      throw "WANNA DIE"
-    console.log "-#{msg}--:", entries.map (e) => @dumpEntry(e)
 
 module.exports =
   history: null
 
   activate: ->
-    @history = getHisotryManager()
+    @history = getHisotryManager(atom.workspace.getActivePane())
     @subscriptions = new CompositeDisposable
-    @history.save(atom.workspace.getActivePane())
     @input = new (require './input')
 
     @subscribe atom.commands.add 'atom-workspace',

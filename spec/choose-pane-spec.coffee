@@ -11,8 +11,15 @@ getLastChildFromModel = (model) ->
   element = atom.views.getView(model)
   element.lastChild
 
+dispatch = (element, commandName) ->
+  atom.commands.dispatch(element, commandName)
+
 describe "choose-pane", ->
-  [main, editor, workspaceElement, elementFile1, elementFile2, elementFile3] = []
+  [main, inputElement, editor, workspaceElement, elementFile1, elementFile2, elementFile3] = []
+  [waitsForFinish] = []
+
+  waitsForFinish = ->
+    waitsFor -> main.labelElements is null
 
   beforeEach ->
     workspaceElement = atom.views.getView(atom.workspace)
@@ -29,64 +36,63 @@ describe "choose-pane", ->
     runs ->
       activationPromise = atom.packages.activatePackage("choose-pane").then (pack) ->
         main = pack.mainModule
-      atom.commands.dispatch(workspaceElement, 'choose-pane:start')
+        inputElement = main.input.editorElement
+      dispatch(workspaceElement, 'choose-pane:start')
 
     waitsForPromise ->
       activationPromise
 
     runs ->
-      atom.commands.dispatch(main.input.editorElement, 'core:cancel')
-      atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
-
-    waitsFor ->
-      main.labelElements is null
+      dispatch(inputElement, 'core:cancel')
+      dispatch(workspaceElement, 'tree-view:toggle')
+    waitsForFinish()
 
   describe "chose-pane:start", ->
-    [leftPanels, panes, rightPanels, targets] = []
-    ensureLabels = (models, {labels}) ->
+    [leftPanels, panes, rightPanels] = []
+    _ensureLabels = (models, labels) ->
       labelElements = models.map(getLastChildFromModel)
       labelElements.every (element) -> expect(element.className).toBe('choose-pane')
       labelsAssigned = labelElements.map (element) -> element.textContent
       expect(labelsAssigned).toEqual(labels)
 
-    updateTargets = ->
-      leftPanels = atom.workspace.getLeftPanels()
-      panes = atom.workspace.getPanes()
-      rightPanels = atom.workspace.getRightPanels()
-      targets = [leftPanels..., panes..., rightPanels...]
+    ensureLabels = (targetsToLabels) ->
+      {leftPanels, panes, rightPanels} = targetsToLabels
+      _ensureLabels(atom.workspace.getLeftPanels(), leftPanels) if leftPanels?
+      _ensureLabels(atom.workspace.getPanes(), panes) if panes?
+      _ensureLabels(atom.workspace.getRightPanels(), rightPanels) if rightPanels?
+
+    forEachTarget = (fn) ->
+      [ atom.workspace.getLeftPanels()...
+        atom.workspace.getPanes()...
+        atom.workspace.getRightPanels()...
+      ].forEach(fn)
 
     chooseLabel = (labelChar, fn) ->
       runs -> main.input.editor.setText(labelChar)
-      waitsFor -> main.labelElements is null
+      waitsForFinish()
       runs -> fn()
 
     start = ->
-      atom.commands.dispatch(workspaceElement, 'choose-pane:start')
+      dispatch(workspaceElement, 'choose-pane:start')
 
     describe "tree-view is show on left side", ->
 
       it "append label element to each panels and panes", ->
         runs ->
           start()
-          updateTargets()
-          ensureLabels(leftPanels, labels: [';'])
-          ensureLabels(panes, labels: ['A', 'B', 'C'])
-          ensureLabels(rightPanels, labels: [])
+          ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
           expect(main.labelElements).toHaveLength(4)
-          atom.commands.dispatch(main.input.editorElement, 'core:cancel')
+          dispatch(inputElement, 'core:cancel')
 
         waitsFor -> main.labelElements is null
-        runs -> targets.forEach (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)
+        runs -> forEachTarget (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)
 
       it "can directly focus chosen target", ->
         expect(document.activeElement).toBe(elementFile3)
 
         runs ->
           start()
-          updateTargets()
-          ensureLabels(leftPanels, labels: [';'])
-          ensureLabels(panes, labels: ['A', 'B', 'C'])
-          ensureLabels(rightPanels, labels: [])
+          ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
           chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
         runs -> start(); chooseLabel "A", -> expect(document.activeElement).toBe(elementFile1)
@@ -102,31 +108,23 @@ describe "choose-pane", ->
 
         runs ->
           start()
-          updateTargets()
-          ensureLabels(leftPanels, labels: [';'])
-          ensureLabels(panes, labels: ['A', 'B', 'C'])
-          ensureLabels(rightPanels, labels: [])
+          ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
           chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
-        runs -> start(); atom.commands.dispatch(main.input.editorElement, 'choose-pane:last-focused')
-        waitsFor -> main.labelElements is null
+        runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForFinish()
         runs -> expect(document.activeElement).toBe(elementFile3)
 
-        runs -> start(); atom.commands.dispatch(main.input.editorElement, 'choose-pane:last-focused')
-        waitsFor -> main.labelElements is null
+        runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForFinish()
         runs -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
     describe "when tree-view is shown on right side", ->
       it "append label element to each panels and panes", ->
         runs ->
           atom.config.set('tree-view.showOnRightSide', true)
-          updateTargets()
-          atom.commands.dispatch(workspaceElement, 'choose-pane:start')
-          ensureLabels(leftPanels, labels: [])
-          ensureLabels(panes, labels: [';', 'A', 'B'])
-          ensureLabels(rightPanels, labels: ['C'])
+          dispatch(workspaceElement, 'choose-pane:start')
+          ensureLabels(leftPanels: [], panes: [';', 'A', 'B'], rightPanels: ['C'])
           expect(main.labelElements).toHaveLength(4)
-          atom.commands.dispatch(main.input.editorElement, 'core:cancel')
+          dispatch(inputElement, 'core:cancel')
+          waitsForFinish()
 
-        waitsFor -> main.labelElements is null
-        runs -> targets.forEach (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)
+        runs -> forEachTarget (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)

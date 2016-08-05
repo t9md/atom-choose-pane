@@ -43,11 +43,14 @@ module.exports =
   activate: ->
     @history = getHisotryManager()
     @subscriptions = new CompositeDisposable
+    @history.save(atom.workspace.getActivePane())
+    @input = new (require './input')
+
     @subscribe atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
+      'choose-pane:focus-last-focused': => @lastFocused()
 
     handleFocusPane = (event) =>
-      # console.log "focus pane", event.target
       @history?.save(event.target.getModel())
 
     @subscribe atom.workspace.observePanes (pane) ->
@@ -57,17 +60,12 @@ module.exports =
       getView(pane).removeEventListener('focus', handleFocusPane, false)
 
     @subscribe atom.workspace.panelContainers.left.onDidAddPanel ({panel}) =>
-      item = panel.getItem()
-      return unless isInstanceOfTreeView(item)
-      item.on 'focus.choose-pane', '.tree-view', (event) =>
-        # console.log "focus panel", event.target
-        @history.save(panel)
+      if isInstanceOfTreeView(item = panel.getItem())
+        item.on 'focus.choose-pane', '.tree-view', (event) => @history.save(panel)
 
     @subscribe atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
-      # console.log 'removed', panel
-      item = panel.getItem()
-      return unless isInstanceOfTreeView(item)
-      item.off('focus.choose-pane', '.tree-view')
+      if isInstanceOfTreeView(item = panel.getItem())
+        item.off('focus.choose-pane', '.tree-view')
 
   deactivate: ->
     @input?.destroy()
@@ -77,12 +75,11 @@ module.exports =
   subscribe: (arg) ->
     @subscriptions.add(arg)
 
-  start: ->
-    @history.dump('start')
-    focusedElement = document.activeElement
-    restoreFocus = ->
-      focusedElement?.focus()
+  lastFocused: ->
+    target = @history.getLastFocus()
+    @focusTarget(target) if target?
 
+  start: ->
     targets = [
       atom.workspace.getLeftPanels()...
       atom.workspace.getPanes()...
@@ -95,7 +92,9 @@ module.exports =
       label2Target[labelChar.toLowerCase()] = target
       @renderLabel(target, labelChar)
 
-    @input ?= new (require './input')
+    focusedElement = document.activeElement
+    restoreFocus = -> focusedElement?.focus()
+
     @input.readInput().then (char) =>
       target = if char is 'last-focused'
         @history.getLastFocus()
@@ -110,11 +109,6 @@ module.exports =
     .catch =>
       restoreFocus()
       @removeLabelElemnts()
-
-  getLabelClassNameForTarget: (target) ->
-    switch
-      when @hasTargetFocused(target) then 'active'
-      when target is @history.getLastFocus() then 'last-focused'
 
   hasTargetFocused: (target) ->
     switch
@@ -132,7 +126,9 @@ module.exports =
 
   renderLabel: (target, labelChar) ->
     @labelElements ?= []
-    className = @getLabelClassNameForTarget(target)
+    className = switch
+      when @hasTargetFocused(target) then 'active'
+      when target is @history.getLastFocus() then 'last-focused'
     labelElement = createLabelElement(labelChar, className)
     getView(target).appendChild(labelElement)
     @labelElements.push(labelElement)

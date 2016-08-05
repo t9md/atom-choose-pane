@@ -1,3 +1,7 @@
+# 0.5.0:
+- Improve the way to detect last-focused element.
+- Introduce new `choose-pane:focus-last-focused`: focus last-focused without showing label.
+
 # 0.4.0:
 - Differentiate last-focused element(pane or panel)
 

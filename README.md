@@ -15,6 +15,15 @@ choose pane by label.
 - Current active pane is highlighted by different color.
 - You can quickly back to last-focused pane by `choose-pane:last-focused` in choosing mode. This last-focused pane denoted by underlined label.
 
+# Commands
+
+### scope: `atom-workspace`
+- `choose-pane:start`: Start label choosing.
+- `choose-pane:focus-last-focused`: Focus last focused pane or panel without showing label.
+
+### scope: `atom-text-editor#choose-pane-editor`
+- `choose-pane:last-focused`: Choose last-focused(underlined) label.
+
 # Style customization
 
 You can customize label style in `style.less`.
@@ -38,6 +47,7 @@ You can customize label style in `style.less`.
 ```coffeescript
 'atom-workspace:not([mini])':
   'ctrl-;': 'choose-pane:start'
+  'cmd-k ;': 'choose-pane:focus-last-focused'
 
 # Back to last focused.
 'atom-text-editor#choose-pane-editor':
@@ -49,10 +59,16 @@ You can customize label style in `style.less`.
 ```coffeescript
 'atom-text-editor.vim-mode-plus:not(.insert-mode)':
   '-': 'choose-pane:start'
+  'm m': 'choose-pane:focus-last-focused'
+
+'.markdown-preview':
+  '-': 'choose-pane:start'
+  'm m': 'choose-pane:focus-last-focused'
 
 # For tree-view
 '.tree-view':
   '-': 'choose-pane:start'
+  'm m': 'choose-pane:focus-last-focused'
 
 # Map '-', so that I can focus last-focused element by typing `-` twice.
 'atom-text-editor#choose-pane-editor':

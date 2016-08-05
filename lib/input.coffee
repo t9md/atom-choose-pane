@@ -8,6 +8,13 @@ class Input extends HTMLElement
     @panel = atom.workspace.addBottomPanel(item: this, visible: false)
     this
 
+  attachedCallback: ->
+    @editorElement = document.getElementById("choose-pane-editor")
+    @editor = @editorElement.getModel()
+    @editor.onDidChange =>
+      @confirm() unless @finished
+    this
+
   destroy: ->
     @editor?.destroy()
     @panel.destroy()
@@ -22,12 +29,6 @@ class Input extends HTMLElement
       'blur': => @cancel() unless @finished
 
   readInput: ->
-    unless @editorElement
-      @editorElement = document.getElementById("choose-pane-editor")
-      @editor = @editorElement.getModel()
-      @editor.onDidChange =>
-        @confirm() unless @finished
-
     @finished = false
     @panel.show()
     @editorElement.focus()

@@ -1,3 +1,4 @@
+path = require 'path'
 {CompositeDisposable} = require 'atom'
 
 createLabelElement = (labelChar, className=null) ->
@@ -8,18 +9,33 @@ createLabelElement = (labelChar, className=null) ->
   element
 
 getView = (model) -> atom.views.getView(model)
-isPane = (target) -> target.constructor.name is 'Pane'
-isPanel = (target) -> target.constructor.name is 'Panel'
+isPane = (target) -> target?.constructor?.name is 'Pane'
+isPanel = (target) -> target?.constructor?.name is 'Panel'
 isFunction = (object) -> typeof(object) is 'function'
+isInstanceOfTreeView = (target) -> target.constructor.name is 'TreeView'
 
 getHisotryManager = ->
   entries = [null, null]
 
-  push: (entry) ->
+  save: (entry) ->
+    return if @getCurrentFocus() is entry
     entries.shift()
     entries.push(entry)
-  get: -> entries[0]
-  dump: -> entries
+    # @dump("SAVING")
+  getLastFocus: -> entries[0]
+  getCurrentFocus: -> entries.slice(-1)[0]
+
+  dumpEntry: (entry) ->
+    name = entry?.constructor?.name
+    str = switch
+      when isPane(entry) then path.basename(entry.getActiveEditor()?.getPath?())
+      when isPanel(entry) then 'Panel'
+    "#{name}: #{str}"
+
+  dump: (msg) ->
+    unless entries.length is 2
+      throw "WANNA DIE"
+    console.log "-#{msg}--:", entries.map (e) => @dumpEntry(e)
 
 module.exports =
   history: null
@@ -30,13 +46,28 @@ module.exports =
     @subscribe atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
 
-    @subscribe atom.workspace.observeActivePane (pane) =>
-      @history.push(pane) unless @isLocked()
+    handleFocusPane = (event) =>
+      # console.log "focus pane", event.target
+      @history?.save(event.target.getModel())
 
-  locked: false
-  lock: -> @locked = true
-  unLock: -> @locked = false
-  isLocked: -> @locked
+    @subscribe atom.workspace.observePanes (pane) ->
+      getView(pane).addEventListener('focus', handleFocusPane, false)
+
+    @subscribe atom.workspace.onDidDestroyPane ({pane}) ->
+      getView(pane).removeEventListener('focus', handleFocusPane, false)
+
+    @subscribe atom.workspace.panelContainers.left.onDidAddPanel ({panel}) =>
+      item = panel.getItem()
+      return unless isInstanceOfTreeView(item)
+      item.on 'focus.choose-pane', '.tree-view', (event) =>
+        # console.log "focus panel", event.target
+        @history.save(panel)
+
+    @subscribe atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
+      # console.log 'removed', panel
+      item = panel.getItem()
+      return unless isInstanceOfTreeView(item)
+      item.off('focus.choose-pane', '.tree-view')
 
   deactivate: ->
     @input?.destroy()
@@ -47,6 +78,7 @@ module.exports =
     @subscriptions.add(arg)
 
   start: ->
+    @history.dump('start')
     focusedElement = document.activeElement
     restoreFocus = ->
       focusedElement?.focus()
@@ -66,15 +98,12 @@ module.exports =
     @input ?= new (require './input')
     @input.readInput().then (char) =>
       target = if char is 'last-focused'
-        @history.get()
+        @history.getLastFocus()
       else
         label2Target[char.toLowerCase()]
 
       if target?
-        @lock()
         @focusTarget(target)
-        @history.push(target)
-        @unLock()
       else
         restoreFocus()
       @removeLabelElemnts()
@@ -85,15 +114,7 @@ module.exports =
   getLabelClassNameForTarget: (target) ->
     switch
       when @hasTargetFocused(target) then 'active'
-      when @hasLastFocused(target) then 'last-focused'
-
-  hasLastFocused: (target) ->
-    lastFocused = @history.get()
-    return false unless lastFocused?
-    if target.constructor is lastFocused.constructor
-      target is lastFocused
-    else
-      false
+      when target is @history.getLastFocus() then 'last-focused'
 
   hasTargetFocused: (target) ->
     switch

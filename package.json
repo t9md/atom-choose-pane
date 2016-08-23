@@ -1,7 +1,7 @@
 {
   "name": "choose-pane",
   "main": "./lib/main",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "choose pane by label",
   "repository": "https://github.com/t9md/atom-choose-pane",
   "license": "MIT",

@@ -11,8 +11,6 @@ class Input extends HTMLElement
   attachedCallback: ->
     @editorElement = document.getElementById("choose-pane-editor")
     @editor = @editorElement.getModel()
-    @editor.onDidChange =>
-      @confirm() unless @finished
     this
 
   destroy: ->
@@ -33,6 +31,9 @@ class Input extends HTMLElement
     @panel.show()
     @editorElement.focus()
     @commandSubscription = @handleEvents()
+    disposable = @editor.onDidChange =>
+      disposable.dispose()
+      @confirm() unless @finished
 
     new Promise (@resolve, @reject) =>
 

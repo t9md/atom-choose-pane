@@ -1,3 +1,6 @@
+# 0.5.1:
+- Fix: Uncaught TypeError: this.resolve is not a function which is triggerd `core:confirm` of command-palette #1
+
 # 0.5.0:
 - Improve the way to detect last-focused element.
 - Introduce new `choose-pane:focus-last-focused`: focus last-focused without showing label.

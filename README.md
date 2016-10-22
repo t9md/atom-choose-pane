@@ -35,7 +35,7 @@ You can customize label style in `style.less`.
     color: green;
   }
   &.last-focused {
-    text-decoration: line-through;;
+    text-decoration: line-through;
   }
 }
 ```

@@ -1,14 +1,14 @@
 path = require 'path'
 {CompositeDisposable} = require 'atom'
 
-createLabelElement = (labelChar, className=null) ->
+createLabel = (labelChar, className) ->
   element = document.createElement("div")
   element.classList.add("choose-pane")
   element.classList.add(className) if className
   element.textContent = labelChar
   element
 
-removeLabelElemnts = ->
+removeLabels = ->
   for element in document.querySelectorAll("div.choose-pane")
     element.remove()
 
@@ -91,7 +91,8 @@ module.exports =
         when isFocused(target) then 'active'
         when target is lastFocusedTarget then 'last-focused'
 
-      getView(target).appendChild(createLabelElement(labelChar, className))
+      label = createLabel(labelChar, className)
+      getView(target).appendChild(label)
       targetByLabel[labelChar.toLowerCase()] = target
 
     # Special label used for focus-last-focused
@@ -100,12 +101,12 @@ module.exports =
     focusedElement = document.activeElement
     restoreFocus = -> focusedElement?.focus()
 
-    @input.readInput().then (char) =>
+    @input.readInput().then (char) ->
       if target = targetByLabel[char.toLowerCase()]
         focusTarget(target)
       else
         restoreFocus()
-      removeLabelElemnts()
-    .catch =>
+      removeLabels()
+    .catch ->
       restoreFocus()
-      removeLabelElemnts()
+      removeLabels()

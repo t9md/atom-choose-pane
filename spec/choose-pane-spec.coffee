@@ -7,7 +7,7 @@ getLabelElementsForModel = (model) ->
   element = atom.views.getView(model)
   element.getElementsByClassName('choose-pane')
 
-getLastChildFromModel = (model) ->
+getLastChildForModel = (model) ->
   element = atom.views.getView(model)
   element.lastChild
 
@@ -16,19 +16,30 @@ dispatch = (element, commandName) ->
 
 describe "choose-pane", ->
   [main, inputElement, editor, workspaceElement, elementFile1, elementFile2, elementFile3] = []
+  [editor1, editor2, editor3] = []
   [waitsForFinish] = []
 
+  getLabelElements = ->
+    document.querySelectorAll("div.choose-pane")
+
   waitsForFinish = ->
-    waitsFor -> main.labelElements is null
+    waitsFor ->
+      getLabelElements().length is 0
 
   beforeEach ->
     workspaceElement = atom.views.getView(atom.workspace)
     jasmine.attachToDOM workspaceElement
     activationPromise = null
 
-    openFile "file-1", {}, (e) -> elementFile1 = atom.views.getView(e)
-    openFile "file-2", split: 'right', (e) -> elementFile2 = atom.views.getView(e)
-    openFile "file-3", split: 'down', (e) -> elementFile3 = atom.views.getView(e)
+    openFile "file-1", {}, (e) ->
+      editor1 = e
+      elementFile1 = atom.views.getView(e)
+    openFile "file-2", split: 'right', (e) ->
+      editor2 = e
+      elementFile2 = atom.views.getView(e)
+    openFile "file-3", split: 'down', (e) ->
+      editor3 = e
+      elementFile3 = atom.views.getView(e)
 
     waitsForPromise ->
       atom.packages.activatePackage("tree-view")
@@ -50,7 +61,7 @@ describe "choose-pane", ->
   describe "chose-pane:start", ->
     [leftPanels, panes, rightPanels] = []
     _ensureLabels = (models, labels) ->
-      labelElements = models.map(getLastChildFromModel)
+      labelElements = models.map(getLastChildForModel)
       labelElements.every (element) -> expect(element.className).toBe('choose-pane')
       labelsAssigned = labelElements.map (element) -> element.textContent
       expect(labelsAssigned).toEqual(labels)
@@ -81,30 +92,29 @@ describe "choose-pane", ->
         runs ->
           start()
           ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
-          expect(main.labelElements).toHaveLength(4)
+          expect(getLabelElements()).toHaveLength(4)
           dispatch(inputElement, 'core:cancel')
 
-        waitsFor -> main.labelElements is null
-        runs -> forEachTarget (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)
+        waitsForFinish()
 
       it "can directly focus chosen target", ->
-        expect(document.activeElement).toBe(elementFile3)
+        expect(document.activeElement.getModel()).toBe(editor3)
 
         runs ->
           start()
           ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
           chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
-        runs -> start(); chooseLabel "A", -> expect(document.activeElement).toBe(elementFile1)
-        runs -> start(); chooseLabel "B", -> expect(document.activeElement).toBe(elementFile2)
-        runs -> start(); chooseLabel "C", -> expect(document.activeElement).toBe(elementFile3)
+        runs -> start(); chooseLabel "A", -> expect(document.activeElement.getModel()).toBe(editor1)
+        runs -> start(); chooseLabel "B", -> expect(document.activeElement.getModel()).toBe(editor2)
+        runs -> start(); chooseLabel "C", -> expect(document.activeElement.getModel()).toBe(editor3)
 
       it "restore focus when not matching label found", ->
-        expect(document.activeElement).toBe(elementFile3)
-        runs -> start(); chooseLabel "Z", -> expect(document.activeElement).toBe(elementFile3)
+        expect(document.activeElement.getModel()).toBe(editor3)
+        runs -> start(); chooseLabel "Z", -> expect(document.activeElement.getModel()).toBe(editor3)
 
       it "can back to last-focused element", ->
-        expect(document.activeElement).toBe(elementFile3)
+        expect(document.activeElement.getModel()).toBe(editor3)
 
         runs ->
           start()
@@ -112,7 +122,7 @@ describe "choose-pane", ->
           chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
         runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForFinish()
-        runs -> expect(document.activeElement).toBe(elementFile3)
+        runs -> expect(document.activeElement.getModel()).toBe(editor3)
 
         runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForFinish()
         runs -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
@@ -123,8 +133,8 @@ describe "choose-pane", ->
           atom.config.set('tree-view.showOnRightSide', true)
           dispatch(workspaceElement, 'choose-pane:start')
           ensureLabels(leftPanels: [], panes: [';', 'A', 'B'], rightPanels: ['C'])
-          expect(main.labelElements).toHaveLength(4)
+          expect(getLabelElements()).toHaveLength(4)
           dispatch(inputElement, 'core:cancel')
-          waitsForFinish()
+        waitsForFinish()
 
         runs -> forEachTarget (model) -> expect(getLabelElementsForModel(model)).toHaveLength(0)

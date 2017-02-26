@@ -1,5 +1,6 @@
 path = require 'path'
 {CompositeDisposable} = require 'atom'
+Input = null
 
 createLabel = (labelChar, className) ->
   element = document.createElement("div")
@@ -47,7 +48,6 @@ module.exports =
   activate: ->
     @history = getHisotryManager(atom.workspace.getActivePane())
     @subscriptions = new CompositeDisposable
-    @input = new (require './input')
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
@@ -71,9 +71,15 @@ module.exports =
         item.off('focus.choose-pane', '.tree-view')
 
   deactivate: ->
-    @input?.destroy()
     @subscriptions?.dispose()
-    {@subscriptions, @input, @history} = {}
+    {@subscriptions, @history} = {}
+
+  choosePaneItem: (which) ->
+    pane = atom.workspace.getActivePane()
+    pane.activate()
+    switch which
+      when 'next' then pane.activateNextItem()
+      when 'previous' then pane.activatePreviousItem()
 
   start: ->
     targets = [
@@ -95,14 +101,24 @@ module.exports =
       getView(target).appendChild(label)
       targetByLabel[labelChar.toLowerCase()] = target
 
-    # Special label used for focus-last-focused
-    targetByLabel['last-focused'] = lastFocusedTarget
-
     focusedElement = document.activeElement
     restoreFocus = -> focusedElement?.focus()
 
-    @input.readInput().then (char) ->
-      if target = targetByLabel[char.toLowerCase()]
+    @readInput().then ({action, char}) =>
+      if action in ['next-item', 'previous-item']
+        if action is 'next-item'
+          @choosePaneItem('next')
+        else
+          @choosePaneItem('previous')
+        removeLabels()
+        @start()
+        return
+
+      if action is 'last-focused'
+        target = lastFocusedTarget
+      else
+        target = targetByLabel[char.toLowerCase()]
+      if target?
         focusTarget(target)
       else
         restoreFocus()
@@ -110,3 +126,7 @@ module.exports =
     .catch ->
       restoreFocus()
       removeLabels()
+
+  readInput: ->
+    Input ?= require './input'
+    new Input().readInput()

@@ -126,7 +126,7 @@ module.exports =
     .catch ->
       restoreFocus()
       removeLabels()
+
   readInput: ->
     Input ?= require './input'
-    input = new Input()
-    input.readInput()
+    new Input().readInput()

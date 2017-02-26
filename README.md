@@ -2,11 +2,16 @@
 
 choose pane by label.
 
-![](https://raw.githubusercontent.com/t9md/t9md/0331a56774cd283aab2548708d740cd0f9f8e59c/img/atom-choose-pane.gif)
+![](https://raw.githubusercontent.com/t9md/t9md/ef179f0e078732e9b73ef891bf163252442f1377/img/atom-choose-pane.gif)
+
+
+overview
+
+![](https://raw.githubusercontent.com/t9md/t9md/ef179f0e078732e9b73ef891bf163252442f1377/img/atom-choose-pane-overview.png)
 
 # How to start
 
-1. Configure keymap in your `keymap.cson`. (no default keymap)
+1. Configure keymap in your `keymap.cson`. (no default keymap except `[`, `]` to activate next/previous tab).
 2. Invoke `choose-pane:start` from that keymap.
 3. Label is shown on panels and panes
 4. Choose label where you want to focus
@@ -28,6 +33,8 @@ choose pane by label.
 
 You can customize label style in `style.less`.
 
+### example 1: simple demonstration
+
 ```less
 .choose-pane {
   color: white;
@@ -39,6 +46,23 @@ You can customize label style in `style.less`.
   }
 }
 ```
+
+### example 2: dim current pane, weak green highlight for target panes
+
+Based on suggestion by [@andyngo](https://github.com/andyngo).
+
+![](https://raw.githubusercontent.com/t9md/t9md/3bc6ec9e25ec2cf9ecd92b51a5e07f2e1ceebfa1/img/atom-choose-pane-costom-style.png)
+
+```less
+.choose-pane {
+  background-color: rgba(112, 182, 101, .1);
+  &.active {
+    background-color: rgba(0, 0, 0, 0.3);
+    color: fade(@syntax-text-color, 50);
+  }
+}
+```
+
 
 # Keymap example
 

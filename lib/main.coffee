@@ -1,5 +1,6 @@
 path = require 'path'
 {CompositeDisposable} = require 'atom'
+Input = null
 
 createLabel = (labelChar, className) ->
   element = document.createElement("div")
@@ -47,7 +48,6 @@ module.exports =
   activate: ->
     @history = getHisotryManager(atom.workspace.getActivePane())
     @subscriptions = new CompositeDisposable
-    @input = new (require './input')
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'choose-pane:start': => @start()
@@ -71,9 +71,8 @@ module.exports =
         item.off('focus.choose-pane', '.tree-view')
 
   deactivate: ->
-    @input?.destroy()
     @subscriptions?.dispose()
-    {@subscriptions, @input, @history} = {}
+    {@subscriptions, @history} = {}
 
   start: ->
     targets = [
@@ -101,7 +100,7 @@ module.exports =
     focusedElement = document.activeElement
     restoreFocus = -> focusedElement?.focus()
 
-    @input.readInput().then (char) ->
+    @readInput().then (char) ->
       if target = targetByLabel[char.toLowerCase()]
         focusTarget(target)
       else
@@ -110,3 +109,8 @@ module.exports =
     .catch ->
       restoreFocus()
       removeLabels()
+
+  readInput: ->
+    Input ?= require './input'
+    input = new Input()
+    input.readInput()

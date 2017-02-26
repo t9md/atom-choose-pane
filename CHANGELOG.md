@@ -1,3 +1,12 @@
+# 0.6.0:
+- New: Command to activate next/previous tab( pane-item ) while choosing.
+  - Following keymap is available while label are shown.
+    - `[`: `choose-pane:previous-item`
+    - `]`: `choose-pane:next-item`
+- Improve: #4 label character centered using flexbox by @andyngo
+- Doc: Add label style example to README.md suggested by @andyngo in #4.
+- Doc: Update gif and add overview gif to README.md.
+
 # 0.5.1:
 - Fix: Uncaught TypeError: this.resolve is not a function which is triggerd `core:confirm` of command-palette #1
 

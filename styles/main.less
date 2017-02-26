@@ -1,6 +1,5 @@
 @import "syntax-variables";
 .choose-pane {
-  background-color: rgba(112,182,101,.1);
   position: absolute;
   top: 0;
   right: 0;
@@ -14,12 +13,9 @@
   align-items: center;
   z-index: 11;
   width: 100%;
-  &::after {
-    font-size: 14px;
-  }
   &.active {
-    background-color: rgba(0,0,0,0.5);
-    color: fade(@syntax-text-color,50);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: fade(@syntax-text-color, 70);
   }
   &.last-focused {
     text-decoration: underline;

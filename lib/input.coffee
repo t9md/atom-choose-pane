@@ -20,18 +20,19 @@ class Input
 
     atom.commands.add @editorElement,
       'choose-pane:last-focused': => @confirm('last-focused')
-      'core:confirm': => @confirm()
+      'choose-pane:next-item': => @confirm('next-item')
+      'choose-pane:previous-item': => @confirm('previous-item')
+      'core:confirm': => @confirm('label')
       'core:cancel': => @cancel()
       'blur': => @cancel() unless @finished
 
-    @editor.onDidChange => @confirm()
+    @editor.onDidChange => @confirm('label')
 
     new Promise (@resolve, @reject) =>
 
-  confirm: (message=null) =>
-    console.log message
+  confirm: (action) =>
     @reject = null
-    @resolve(message ? @editor.getText())
+    @resolve(action: action, char: @editor.getText())
     @cancel()
 
   cancel: ->

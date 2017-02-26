@@ -74,6 +74,13 @@ module.exports =
     @subscriptions?.dispose()
     {@subscriptions, @history} = {}
 
+  choosePaneItem: (which) ->
+    pane = atom.workspace.getActivePane()
+    pane.activate()
+    switch which
+      when 'next' then pane.activateNextItem()
+      when 'previous' then pane.activatePreviousItem()
+
   start: ->
     targets = [
       atom.workspace.getLeftPanels()...
@@ -94,14 +101,24 @@ module.exports =
       getView(target).appendChild(label)
       targetByLabel[labelChar.toLowerCase()] = target
 
-    # Special label used for focus-last-focused
-    targetByLabel['last-focused'] = lastFocusedTarget
-
     focusedElement = document.activeElement
     restoreFocus = -> focusedElement?.focus()
 
-    @readInput().then (char) ->
-      if target = targetByLabel[char.toLowerCase()]
+    @readInput().then ({action, char}) =>
+      if action in ['next-item', 'previous-item']
+        if action is 'next-item'
+          @choosePaneItem('next')
+        else
+          @choosePaneItem('previous')
+        removeLabels()
+        @start()
+        return
+
+      if action is 'last-focused'
+        target = lastFocusedTarget
+      else
+        target = targetByLabel[char.toLowerCase()]
+      if target?
         focusTarget(target)
       else
         restoreFocus()
@@ -109,7 +126,6 @@ module.exports =
     .catch ->
       restoreFocus()
       removeLabels()
-
   readInput: ->
     Input ?= require './input'
     input = new Input()

@@ -29,7 +29,7 @@ focusTarget = (target) ->
     when isPane(target) then target.activate()
     when isPanel(target) then target.getItem().focus?()
 
-getHisotryManager = (initialEntry) ->
+getHistoryManager = (initialEntry) ->
   entries = [null, initialEntry]
 
   save: (entry) ->
@@ -46,7 +46,7 @@ module.exports =
   history: null
 
   activate: ->
-    @history = getHisotryManager(atom.workspace.getActivePane())
+    @history = getHistoryManager(atom.workspace.getActivePane())
     @subscriptions = new CompositeDisposable
 
     @subscriptions.add atom.commands.add 'atom-workspace',

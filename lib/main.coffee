@@ -1,4 +1,5 @@
 path = require 'path'
+semver = require 'semver'
 {CompositeDisposable} = require 'atom'
 Input = null
 
@@ -62,13 +63,14 @@ module.exports =
     @subscriptions.add atom.workspace.onDidDestroyPane ({pane}) ->
       getView(pane).removeEventListener('focus', handleFocusPane, false)
 
-    @subscriptions.add atom.workspace.panelContainers.left.onDidAddPanel ({panel}) =>
-      if isInstanceOfTreeView(item = panel.getItem())
-        item.on 'focus.choose-pane', '.tree-view', (event) => @history.save(panel)
+    if semver.satisfies(atom.getVersion(), '< 1.16.0')
+      @subscriptions.add atom.workspace.panelContainers.left.onDidAddPanel ({panel}) =>
+        if isInstanceOfTreeView(item = panel.getItem())
+          item.on 'focus.choose-pane', '.tree-view', (event) => @history.save(panel)
 
-    @subscriptions.add atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
-      if isInstanceOfTreeView(item = panel.getItem())
-        item.off('focus.choose-pane', '.tree-view')
+      @subscriptions.add atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
+        if isInstanceOfTreeView(item = panel.getItem())
+          item.off('focus.choose-pane', '.tree-view')
 
   deactivate: ->
     @subscriptions?.dispose()

@@ -1,3 +1,4 @@
+semver = require 'semver'
 getLastChildForModel = (model) ->
   element = atom.views.getView(model)
   element.lastChild
@@ -78,17 +79,18 @@ describe "choose-pane", ->
       it "restore focus when not matching label found", ->
         runs -> start(); chooseLabel "Z", -> expect(document.activeElement.getModel()).toBe(editor3)
 
-      it "can back to last-focused element", ->
-        runs ->
-          start()
-          ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
-          chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
+      if semver.satisfies(atom.getVersion(), '< 1.16.0')
+        it "can back to last-focused element", ->
+          runs ->
+            start()
+            ensureLabels(leftPanels: [';'], panes: ['A', 'B', 'C'], rightPanels: [])
+            chooseLabel ";", -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
-        runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForRemoveLabels()
-        runs -> expect(document.activeElement.getModel()).toBe(editor3)
+          runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForRemoveLabels()
+          runs -> expect(document.activeElement.getModel()).toBe(editor3)
 
-        runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForRemoveLabels()
-        runs -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
+          runs -> start(); dispatch(inputElement, 'choose-pane:last-focused'); waitsForRemoveLabels()
+          runs -> expect(document.activeElement.classList.contains('tree-view')).toBe(true)
 
     describe "when tree-view is shown on right side", ->
       it "append label element to each panels and panes", ->

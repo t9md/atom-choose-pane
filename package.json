@@ -16,8 +16,5 @@
       "description": "Always be matched with case insensitive"
     }
   },
-  "dependencies": {
-    "semver": "^5.3.0"
-  },
   "devDependencies": {}
 }

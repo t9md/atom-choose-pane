@@ -1,6 +1,5 @@
 path = require 'path'
-semver = require 'semver'
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Disposable} = require 'atom'
 Input = null
 
 createLabel = (labelChar, className) ->
@@ -54,6 +53,10 @@ module.exports =
       'choose-pane:start': => @start()
       'choose-pane:focus-last-focused': => focusTarget(@history.getLastFocused())
 
+    @observeFocusOfPane()
+    @observeFocusOfTreeViewPanel()
+
+  observeFocusOfPane: ->
     handleFocusPane = (event) =>
       @history?.save(event.target.getModel())
 
@@ -63,14 +66,32 @@ module.exports =
     @subscriptions.add atom.workspace.onDidDestroyPane ({pane}) ->
       getView(pane).removeEventListener('focus', handleFocusPane, false)
 
-    if semver.satisfies(atom.getVersion(), '< 1.16.0')
-      @subscriptions.add atom.workspace.panelContainers.left.onDidAddPanel ({panel}) =>
-        if isInstanceOfTreeView(item = panel.getItem())
-          item.on 'focus.choose-pane', '.tree-view', (event) => @history.save(panel)
+    @subscriptions.add new Disposable ->
+      for pane in atom.workspace.getPanes()
+        getView(pane).removeEventListener('focus', handleFocusPane, false)
 
-      @subscriptions.add atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
-        if isInstanceOfTreeView(item = panel.getItem())
-          item.off('focus.choose-pane', '.tree-view')
+  observeFocusOfTreeViewPanel: ->
+    treeViewPanel = null
+    treeViewListElement = null
+    saveTreeViewPanelToHistory = => @history.save(treeViewPanel)
+
+    @subscriptions.add atom.workspace.panelContainers.left.onDidAddPanel ({panel}) ->
+      if isInstanceOfTreeView(item = panel.getItem())
+        treeViewPanel = panel
+        if typeof(item.list.addEventListener) is 'function'
+          treeViewListElement = item.list
+        else
+          treeViewListElement = item.list[0]
+        treeViewListElement.addEventListener('focus', saveTreeViewPanelToHistory, false)
+
+    removeListnerFromTreeViewListElement = ->
+      treeViewListElement.removeEventListener('focus', saveTreeViewPanelToHistory, false)
+
+    @subscriptions.add atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
+      if panel is treeViewPanel
+        removeListnerFromTreeViewListElement()
+
+    @subscriptions.add new Disposable -> removeListnerFromTreeViewListElement()
 
   deactivate: ->
     @subscriptions?.dispose()

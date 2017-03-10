@@ -1,3 +1,6 @@
+# 0.6.1:
+- Fix: Now no longer throw exception in Atom v1.16.0-beta0 and above.
+
 # 0.6.0:
 - New: Command to activate next/previous tab( pane-item ) while choosing.
   - Following keymap is available while label are shown.

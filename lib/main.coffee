@@ -85,7 +85,7 @@ module.exports =
         treeViewListElement.addEventListener('focus', saveTreeViewPanelToHistory, false)
 
     removeListnerFromTreeViewListElement = ->
-      treeViewListElement.removeEventListener('focus', saveTreeViewPanelToHistory, false)
+      treeViewListElement?.removeEventListener('focus', saveTreeViewPanelToHistory, false)
 
     @subscriptions.add atom.workspace.panelContainers.left.onDidRemovePanel ({panel}) ->
       if panel is treeViewPanel

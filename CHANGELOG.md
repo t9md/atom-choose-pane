@@ -1,3 +1,7 @@
+# 0.6.2:
+- Fix: No longer throw exception when deactivated( manually or restart Atom ) without opening tree-view.
+  - The error was happened by trying to removeEventListener for the non existing treeViewListElement.
+
 # 0.6.1:
 - Fix: Now no longer throw exception in Atom v1.16.0-beta0 and above.
 

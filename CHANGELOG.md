@@ -1,3 +1,6 @@
+# 0.7.0: WIP
+- Improve: Reduce computation and amount of IO on package activation for fast atom startup.
+
 # 0.6.2:
 - Fix: No longer throw exception when deactivated( manually or restart Atom ) without opening tree-view.
   - The error was happened by trying to removeEventListener for the non existing treeViewListElement.

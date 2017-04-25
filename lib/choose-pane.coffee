@@ -46,7 +46,7 @@ class ChoosePane
 
     labelChars = atom.config.get('choose-pane.labelChars').split('')
     targetByLabel = {}
-    lastFocusedTarget = @history.getLastFocused()
+    lastFocusedTarget = @history.lastFocused
 
     for target in targets when labelChar = labelChars.shift()
       className = switch
@@ -84,7 +84,7 @@ class ChoosePane
       removeLabels()
 
   focusLastFocused: ->
-    focusTarget(@history.getLastFocused())
+    focusTarget(@history.lastFocused)
 
   readInput: ->
     Input ?= require './input'

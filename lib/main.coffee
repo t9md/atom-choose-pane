@@ -1,19 +1,17 @@
 {CompositeDisposable, Disposable} = require 'atom'
 ChoosePane = null
 
-getHistoryManager = ->
-  initialEntry = atom.workspace.getActivePane()
-  entries = [null, initialEntry]
+class HistoryManager
+  constructor: ->
+    @lastFocused = atom.workspace.getActivePane()
+    @focused = null
 
   save: (entry) ->
     # Ignore unfocus/re-focus to same pane.
     #  e.g. focus mini editor and back to original pane..
-    return if @getCurrentFocus() is entry
-    entries.shift()
-    entries.push(entry)
-
-  getLastFocused: -> entries[0]
-  getCurrentFocus: -> entries.slice(-1)[0]
+    if @focused isnt entry
+      @lastFocused = @focused
+      @focused = entry
 
 module.exports =
   history: null
@@ -23,17 +21,17 @@ module.exports =
     @choosePane ?= new ChoosePane(@history)
 
   activate: ->
-    @history = getHistoryManager()
+    @history = new HistoryManager
     @subscriptions = new CompositeDisposable
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'choose-pane:start': => @getChoosePane().start()
       'choose-pane:focus-last-focused': => @getChoosePane().focusLastFocused()
 
-    @observeFocusOfPane()
-    @observeFocusOfTreeViewPanel()
+    @observeFocusPane()
+    @observeFocusTreeViewPanel()
 
-  observeFocusOfPane: ->
+  observeFocusPane: ->
     handleFocusPane = (event) =>
       @history?.save(event.target.getModel())
 
@@ -47,7 +45,7 @@ module.exports =
       for pane in atom.workspace.getPanes()
         atom.views.getView(pane).removeEventListener('focus', handleFocusPane, false)
 
-  observeFocusOfTreeViewPanel: ->
+  observeFocusTreeViewPanel: ->
     treeViewPanel = null
     treeViewListElement = null
     saveTreeViewPanelToHistory = => @history.save(treeViewPanel)

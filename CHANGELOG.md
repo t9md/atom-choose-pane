@@ -1,4 +1,4 @@
-# 0.7.0: WIP
+# 0.7.0:
 - Improve: Reduce computation and amount of IO on activation for faster Atom startup.
 
 # 0.6.2:

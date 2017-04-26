@@ -33,7 +33,7 @@ module.exports =
 
   observeFocusPane: ->
     handleFocusPane = (event) =>
-      @history?.save(event.target.getModel())
+      @history.save(event.target.getModel())
 
     @subscriptions.add atom.workspace.observePanes (pane) ->
       atom.views.getView(pane).addEventListener('focus', handleFocusPane, false)

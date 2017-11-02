@@ -1,3 +1,9 @@
+# 0.8.0:
+- Maintenance: Convert to JavaScript.
+- Breaking: Panels are no longer supported, now this is pkg to choose pane as name imply.
+  - Why I supported "Panel" is for tree-view, but tree-view is now pane in dock.
+  - So just supporting pane is OK for original purpose.
+
 # 0.7.0:
 - Improve: Reduce computation and amount of IO on activation for faster Atom startup.
 

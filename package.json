@@ -16,5 +16,7 @@
       "description": "Always be matched with case insensitive"
     }
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "prettier": "^1.10.2"
+  }
 }
